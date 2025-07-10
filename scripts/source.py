@@ -10,6 +10,7 @@ class Resource:
     prefix: str
     plugin_prefix: str
     script_prefix: str
+    jq_prefix: str
     urls: list[str]
 
 
@@ -30,6 +31,7 @@ def get_sources() -> Generator[Resource]:
         prefix="kelee",
         plugin_prefix="https://kelee.one/Tool/Loon/",
         script_prefix="https://kelee.one/Resource/",
+        jq_prefix="https://kelee.one/Resource/",
         urls=get_kelee_plugin_urls(),
     )
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from source import get_sources, Resource
 from download import download_data
-from parse import parse_script_url, parse_script_time
+from parse import parse_script_url, parse_jq_url, parse_script_time
 from version import get_current_tag, has_file_changed, get_tag_when_file_last_modified
 
 REPO = "Akimio521/LoonPluginBackup"
@@ -77,6 +77,36 @@ def proccess_source(resource: Resource, clean: bool) -> None:
 
             plugin_content = plugin_content.replace(script_url, new_script_url)
             print(f"将插件中的 JS 脚本路径 「{script_url}」替换为 「{new_script_url}」")
+
+            for jq_url in parse_jq_url(plugin_content):
+                if not jq_url.startswith(resource.jq_prefix):
+                    print(
+                        f"JQ 脚本 URL: {jq_url} 不含前缀: {resource.jq_prefix}，跳过处理"
+                    )
+                    continue
+
+                jq_dest = jq_url.replace(resource.jq_prefix, "")
+                jq_path = base_path / jq_dest
+                print(f"将 JQ 脚本 {jq_url.split('/')[-1]} 下载到 {jq_path}")
+                jq_content = download_data(jq_url)
+                jq_path.parent.mkdir(parents=True, exist_ok=True)
+
+                with open(jq_path, "w", encoding="utf-8") as f:
+                    f.write(jq_content)
+
+                if has_file_changed(PROJECT_ROOT, jq_path):
+                    print(f"JQ 脚本 {jq_dest} 已修改，保存到 {jq_path}")
+                    new_jq_url = (
+                        f"{REPO_RAW_URL_PREFIX}/{TAG}/{resource.prefix}/{jq_dest}"
+                    )
+                else:
+                    old_tag = get_tag_when_file_last_modified(PROJECT_ROOT, jq_path)
+                    new_jq_url = (
+                        f"{REPO_RAW_URL_PREFIX}/{old_tag}/{resource.prefix}/{jq_dest}"
+                    )
+
+            plugin_content = plugin_content.replace(jq_url, new_jq_url)
+            print(f"将插件中的 JQ 脚本路径 「{jq_url}」替换为 「{new_jq_url}」")
 
         # 保存修改后的插件内容
         with open(plugin_path, "w", encoding="utf-8") as f:
