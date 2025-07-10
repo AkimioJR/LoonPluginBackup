@@ -1,16 +1,20 @@
 import shutil
 import argparse
+
 from pathlib import Path
 
 from source import get_sources, Resource
 from download import download_data
 from parse import parse_script_url, parse_script_time
+from version import get_current_tag, has_file_changed, get_tag_when_file_last_modified
 
 REPO = "Akimio521/LoonPluginBackup"
-PLUGIN_BRANCH = "main"
-REPO_RAW_URL = f"https://raw.githubusercontent.com/{REPO}/{PLUGIN_BRANCH}"
 
 PROJECT_ROOT = Path(__file__).parent.parent  # 项目根目录
+
+
+TAG = get_current_tag()
+REPO_RAW_URL_PREFIX = f"https://raw.githubusercontent.com/{REPO}"
 
 
 def proccess_source(resource: Resource, clean: bool) -> None:
@@ -47,22 +51,32 @@ def proccess_source(resource: Resource, clean: bool) -> None:
         for script_url in parse_script_url(plugin_content):
             if not script_url.startswith(resource.script_prefix):
                 print(
-                    f"脚本 URL: {script_url} 不含前缀: {resource.script_prefix}，跳过处理"
+                    f"JS 脚本 URL: {script_url} 不含前缀: {resource.script_prefix}，跳过处理"
                 )
                 continue
 
             script_dest = script_url.replace(resource.script_prefix, "")
             script_path = base_path / script_dest
-            print(f"将脚本 {script_url.split('/')[-1]} 下载到 {script_path}")
+            print(f"将 JS 脚本 {script_url.split('/')[-1]} 下载到 {script_path}")
             script_content = download_data(script_url)
             script_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(script_path, "w", encoding="utf-8") as f:
                 f.write(script_content)
 
-            new_script_url = f"{REPO_RAW_URL}/{resource.prefix}/{script_dest}"
+            if has_file_changed(PROJECT_ROOT, script_path):
+                print(f"JS 脚本 {script_dest} 已修改，保存到 {script_path}")
+                new_script_url = (
+                    f"{REPO_RAW_URL_PREFIX}/{TAG}/{resource.prefix}/{script_dest}"
+                )
+            else:
+                old_tag = get_tag_when_file_last_modified(PROJECT_ROOT, script_path)
+                new_script_url = (
+                    f"{REPO_RAW_URL_PREFIX}/{old_tag}/{resource.prefix}/{script_dest}"
+                )
+
             plugin_content = plugin_content.replace(script_url, new_script_url)
-            print(f"将插件中的脚本路径 「{script_url}」替换为 「{new_script_url}」")
+            print(f"将插件中的 JS 脚本路径 「{script_url}」替换为 「{new_script_url}」")
 
         # 保存修改后的插件内容
         with open(plugin_path, "w", encoding="utf-8") as f:

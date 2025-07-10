@@ -72,12 +72,7 @@ jobs:
         git commit -m "🚀 update $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
         git push origin main
 
-        TAG_NAME=$(date +'%Y%m%d')
-
-        if git rev-parse "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
-          echo "Tag $TAG_NAME 已存在，添加时间后缀"
-          TAG_NAME="${TAG_NAME}-$(date +'%H%M%S')"
-        fi
+        TAG_NAME=$(python scripts/version.py)
         
         echo "创建tag: $TAG_NAME"
         git tag -a "$TAG_NAME" -m "🚀 Update on $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
