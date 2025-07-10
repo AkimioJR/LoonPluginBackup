@@ -1,0 +1,92 @@
+name: Auto Backup Loon Plugins
+
+on:
+  schedule:
+    - cron: '0 0 */2 * *'
+  workflow_dispatch:
+    inputs:
+      clean:
+        description: '是否清理已有文件 (true/false)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Initialization environment
+      run : |
+        sudo timedatectl set-timezone "Asia/Shanghai"
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run backup script
+      run: |
+        # 设置clean参数：手动触发时使用输入值，自动运行时默认为false
+        CLEAN_ARG=""
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event.inputs.clean }}" = "true" ]; then
+            CLEAN_ARG="--clean"
+          fi
+        fi
+        
+        echo "运行命令: python scripts/main.py $CLEAN_ARG"
+        python scripts/main.py $CLEAN_ARG 
+    
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "检测到文件变化"
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "没有检测到文件变化"
+        fi
+    
+    - name: Commit and push changes
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      run: |
+        git add .
+        git commit -m "🚀 update $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
+        git push origin main
+
+        TAG_NAME=$(date +'%Y%m%d')
+
+        if git rev-parse "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME 已存在，添加时间后缀"
+          TAG_NAME="${TAG_NAME}-$(date +'%H%M%S')"
+        fi
+        
+        echo "创建tag: $TAG_NAME"
+        git tag -a "$TAG_NAME" -m "🚀 Update on $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
+        git push origin "$TAG_NAME"
+        
+
+        echo "✅ 备份完成！"
+        echo "📝 变化已提交到main分支"
+        echo "🏷️ 新tag已创建: $(date +'%Y%m%d')"
+    
+    - name: No changes summary
+      if: steps.verify-changed-files.outputs.changed == 'false'
+      run: |
+        echo "ℹ️ 没有检测到变化，跳过提交和tag创建"
