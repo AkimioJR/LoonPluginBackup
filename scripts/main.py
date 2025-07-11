@@ -105,8 +105,8 @@ def proccess_source(resource: Resource, clean: bool) -> None:
                         f"{REPO_RAW_URL_PREFIX}/{old_tag}/{resource.prefix}/{jq_dest}"
                     )
 
-            plugin_content = plugin_content.replace(jq_url, new_jq_url)
-            print(f"将插件中的 JQ 脚本路径 「{jq_url}」替换为 「{new_jq_url}」")
+                plugin_content = plugin_content.replace(jq_url, new_jq_url)
+                print(f"将插件中的 JQ 脚本路径 「{jq_url}」替换为 「{new_jq_url}」")
 
         # 保存修改后的插件内容
         with open(plugin_path, "w", encoding="utf-8") as f:
