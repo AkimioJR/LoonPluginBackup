@@ -18,12 +18,18 @@ def get_kelee_plugin_urls() -> list[str]:
     """
     从可莉github中提取表格中的插件URL
     """
-    URL = "https://raw.githubusercontent.com/luestr/ProxyResource/main/README.md"
-    PATTERN = r'<a href="https://www.nsloon.com/openloon/import\?plugin=([^"]+\.lpx)">'
-
+    URL = "https://pluginhub.kelee.one/Lpx_list.json"
+    
+    urls: list[str] = []
     with Client() as client:
         response = client.get(URL)
-    return findall(PATTERN, response.text)
+    
+    for item in response.json().get("lists",[]):
+        url=item.get("url", "").replace("loon://import?plugin=", "")
+        if url:
+            urls.append(url)
+
+    return urls
 
 
 def get_sources() -> Generator[Resource]:
