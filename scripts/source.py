@@ -18,7 +18,7 @@ def get_kelee_plugin_urls() -> list[str]:
     """
     从可莉github中提取表格中的插件URL
     """
-    URL = "https://pluginhub.kelee.one/Lpx_list.json"
+    URL = "https://99z.top/https://pluginhub.kelee.one/Lpx_list.json"
     headers = {
         "Referer": "https://pluginhub.kelee.one/",
         "Accept": "application/json",
@@ -31,15 +31,10 @@ def get_kelee_plugin_urls() -> list[str]:
         response = client.get(URL)
         if response.status_code != 200:
             print(f"请求失败，状态码: {response.status_code}")
-            return []
-        try:
-            data = response.json()
-        except Exception as e:
-            print(f"JSON解析失败: {e}")
-            print(f"响应内容: {response.text}")
+            print(response)
             return []
 
-    for item in data.get("lists",[]):
+    for item in response.json().get("lists",[]):
         url=item.get("url", "").replace("loon://import?plugin=", "")
         if url:
             urls.append(url)
