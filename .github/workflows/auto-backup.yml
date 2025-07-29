@@ -94,6 +94,11 @@ jobs:
           TAG_NAME=$(python scripts/version.py)
 
           echo "创建tag: $TAG_NAME"
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME 已存在，正在替换..."
+            git tag -d "$TAG_NAME"
+            git push origin :refs/tags/$TAG_NAME
+          fi
           git tag -a "$TAG_NAME" -m "🚀 Update on $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
           git push origin "$TAG_NAME"
 
