@@ -20,9 +20,11 @@ def get_kelee_plugin_urls() -> list[str]:
     """
     URL = "https://pluginhub.kelee.one/Lpx_list.json"
     headers = {
-        "Referer":"https://pluginhub.kelee.one/",
+        "Referer": "https://pluginhub.kelee.one/",
         "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Connection": "keep-alive"
     }   
     urls: list[str] = []
     with Client(headers=headers) as client:
