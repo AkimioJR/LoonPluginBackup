@@ -2,112 +2,110 @@ name: Auto Backup Loon Plugins
 
 on:
   schedule:
-    - cron: '0 0 */2 * *'
+    - cron: "0 0 */2 * *"
   workflow_dispatch:
     inputs:
       clean:
-        description: '是否清理已有文件 (true/false)'
+        description: "是否清理已有文件 (true/false)"
         required: false
-        default: 'false'
+        default: "false"
         type: choice
         options:
-          - 'false'
-          - 'true'
+          - "false"
+          - "true"
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-    - name: Initialization environment
-      run : |
-        sudo timedatectl set-timezone "Asia/Shanghai"
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
+      - name: Initialization environment
+        run: |
+          sudo timedatectl set-timezone "Asia/Shanghai"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0
-    
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Run backup script
-      run: |
-        # 设置clean参数：手动触发时使用输入值，自动运行时默认为false
-        CLEAN_ARG=""
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          if [ "${{ github.event.inputs.clean }}" = "true" ]; then
-            CLEAN_ARG="--clean"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run backup script
+        run: |
+          # 设置clean参数：手动触发时使用输入值，自动运行时默认为false
+          CLEAN_ARG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.clean }}" = "true" ]; then
+              CLEAN_ARG="--clean"
+            fi
           fi
-        fi
-        
-        echo "运行命令: python scripts/main.py $CLEAN_ARG"
-        python scripts/main.py $CLEAN_ARG 
-    
-    - name: Check for changes
-      id: verify-changed-files
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "changed=true" >> $GITHUB_OUTPUT
-          echo "检测到文件变化"
-          
-          # 检查Lpx插件变化
-          CHANGED_PLUGINS=$(git status --porcelain | grep -E "kelee/Lpx/.*\.lpx$" | awk '{print $2}' | sed 's|kelee/Lpx/||' | sed 's|\.lpx$||' | sort | head -20)
-          if [ -n "$CHANGED_PLUGINS" ]; then
-            PLUGIN_LIST=$(echo "$CHANGED_PLUGINS" | tr '\n' ', ' | sed 's|, $||')
-            echo "plugins=$PLUGIN_LIST" >> $GITHUB_OUTPUT
-            echo "发现插件变化: $PLUGIN_LIST"
+
+          echo "运行命令: python scripts/main.py $CLEAN_ARG"
+          python scripts/main.py $CLEAN_ARG
+
+      - name: Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "检测到文件变化"
+            
+            # 检查Lpx插件变化
+            CHANGED_PLUGINS=$(git status --porcelain | grep -E "kelee/Lpx/.*\.lpx$" | awk '{print $2}' | sed 's|kelee/Lpx/||' | sed 's|\.lpx$||' | sort | head -20)
+            if [ -n "$CHANGED_PLUGINS" ]; then
+              PLUGIN_LIST=$(echo "$CHANGED_PLUGINS" | tr '\n' ', ' | sed 's|, $||')
+              echo "plugins=$PLUGIN_LIST" >> $GITHUB_OUTPUT
+              echo "发现插件变化: $PLUGIN_LIST"
+            else
+              echo "plugins=" >> $GITHUB_OUTPUT
+              echo "仅非插件文件发生变化"
+            fi
           else
+            echo "changed=false" >> $GITHUB_OUTPUT
             echo "plugins=" >> $GITHUB_OUTPUT
-            echo "仅非插件文件发生变化"
+            echo "没有检测到文件变化"
           fi
-        else
-          echo "changed=false" >> $GITHUB_OUTPUT
-          echo "plugins=" >> $GITHUB_OUTPUT
-          echo "没有检测到文件变化"
-        fi
-    
-    - name: Commit and push changes
-      if: steps.verify-changed-files.outputs.changed == 'true'
-      run: |
-        git add .
-        
-        # 构建commit消息
-        COMMIT_MSG="🚀 update $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
-        CHANGED_PLUGINS="${{ steps.verify-changed-files.outputs.plugins }}"
-        
-        if [ -n "$CHANGED_PLUGINS" ]; then
-          COMMIT_MSG="$COMMIT_MSG - 更新插件: $CHANGED_PLUGINS"
-        fi
-        
-        git commit -m "$COMMIT_MSG"
-        git push origin main
 
-        TAG_NAME=$(python scripts/version.py)
-        
-        echo "创建tag: $TAG_NAME"
-        git tag -a "$TAG_NAME" -m "🚀 Update on $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
-        git push origin "$TAG_NAME"
-        
+      - name: Commit and push changes
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        run: |
+          git add .
 
-        echo "✅ 备份完成！"
-        echo "📝 变化已提交到main分支"
-        echo "🏷️ 新tag已创建: $TAG_NAME"
-        if [ -n "$CHANGED_PLUGINS" ]; then
-          echo "📦 更新的插件: $CHANGED_PLUGINS"
-        fi
-    
-    - name: No changes summary
-      if: steps.verify-changed-files.outputs.changed == 'false'
-      run: |
-        echo "ℹ️ 没有检测到变化，跳过提交和tag创建"
+          # 构建commit消息
+          COMMIT_TITLE="🚀 update $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
+          CHANGED_PLUGINS="${{ steps.verify-changed-files.outputs.plugins }}"
+          COMMIT_BODY=""
+          if [ -n "$CHANGED_PLUGINS" ]; then
+            COMMIT_BODY="\n\n更新插件列表:\n$CHANGED_PLUGINS"
+          fi
+          git commit -m "$COMMIT_TITLE" -m "$COMMIT_BODY"
+          git push origin main
+
+          TAG_NAME=$(python scripts/version.py)
+
+          echo "创建tag: $TAG_NAME"
+          git tag -a "$TAG_NAME" -m "🚀 Update on $(date +'%Y-%m-%d %H:%M:%S UTC+8')"
+          git push origin "$TAG_NAME"
+
+
+          echo "✅ 备份完成！"
+          echo "📝 变化已提交到main分支"
+          echo "🏷️ 新tag已创建: $TAG_NAME"
+          if [ -n "$CHANGED_PLUGINS" ]; then
+            echo "📦 更新的插件: $CHANGED_PLUGINS"
+          fi
+
+      - name: No changes summary
+        if: steps.verify-changed-files.outputs.changed == 'false'
+        run: |
+          echo "ℹ️ 没有检测到变化，跳过提交和tag创建"
