@@ -23,8 +23,17 @@ def get_kelee_plugin_urls() -> list[str]:
     urls: list[str] = []
     with Client() as client:
         response = client.get(URL)
-    
-    for item in response.json().get("lists",[]):
+        if response.status_code != 200:
+            print(f"请求失败，状态码: {response.status_code}")
+            return []
+        try:
+            data = response.json()
+        except Exception as e:
+            print(f"JSON解析失败: {e}")
+            print(f"响应内容: {response.text}")
+            return []
+
+    for item in data.get("lists",[]):
         url=item.get("url", "").replace("loon://import?plugin=", "")
         if url:
             urls.append(url)
