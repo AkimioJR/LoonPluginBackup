@@ -3,13 +3,16 @@ from httpx import Client
 UA = "Loon/853 CFNetwork/3826.500.111.2.2 Darwin/24.4.0"
 
 
-def download_data(url: str) -> str:
+def download_data(url: str, proxy_url: str="https://99z.top/") -> str:
     """
     下载指定的loon资源
     :param url: 下载链接
+    :param proxy_url: 代理URL，默认为 "https://99z.top/"
     """
     with Client() as client:
-        response = client.get(url, headers={"User-Agent": UA})
+        response = client.get(proxy_url+url, headers={"User-Agent": UA})
+    if response.status_code != 200:
+        raise Exception(f"状态码错误：{response.status_code}", response)
 
     return response.text
 
