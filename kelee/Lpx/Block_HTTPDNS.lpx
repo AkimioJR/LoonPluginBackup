@@ -2,13 +2,13 @@
 #!desc=拦截常见的HTTPDNS服务，以确保这些请求都能够在Loon的DNS框架下工作。
 #!openUrl=
 #!author=可莉🅥[https://github.com/luestr/ProxyResource/blob/main/README.md], VirgilClyne[https://github.com/VirgilClyne]
-#!tag=DNS
+#!tag=去广告, 依赖
 #!system=
 #!system_version=
 #!loon_version=3.2.4(787)
-#!homepage=https://github.com/luestr/ProxyResource/blob/main/README.md
+#!homepage=https://hub.kelee.one
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/Other_icon/120px/HTTPDNS.png
-#!date=2025-06-16 12:29:05
+#!date=2025-08-20 00:30:31
 
 [Rule]
 DOMAIN, yyapp-httpdns.gslb.yy.com, REJECT
@@ -22,11 +22,6 @@ URL-REGEX, "^http:\/\/cdn\.wup\.huya\.com\/launch\/queryHttpDns", REJECT
 DOMAIN, dns2.q2cdn.com, REJECT
 URL-REGEX, "^http:\/\/xmc\.ximalaya\.com\/xmlymain-login-web\/login\/", REJECT
 
-IP-CIDR, 8.134.241.67/32, REJECT, no-resolve
-DOMAIN, httpdns.volcengineapi.com, REJECT
-DOMAIN, dig.bdurl.net, REJECT
-DOMAIN, dig.zjurl.cn, REJECT
-AND, ((DOMAIN-KEYWORD, tnc), (AND, ((OR, ((DOMAIN-KEYWORD, -bjlgy), (DOMAIN-KEYWORD, -alisc), (DOMAIN-KEYWORD, -aliec), (DOMAIN-KEYWORD, -alisg))), (OR, ((DOMAIN-SUFFIX, snssdk.com), (DOMAIN-SUFFIX, isnssdk.com), (DOMAIN-SUFFIX, toutiaoapi.com), (DOMAIN-SUFFIX, bytedance.com), (DOMAIN-SUFFIX, zijieapi.com)))))), REJECT // 字节的HTTPDNS服务，以及控制客户端的QUIC启用。
 
 DOMAIN, dns.weixin.qq.com, REJECT
 DOMAIN, dns.weixin.qq.com.cn, REJECT
