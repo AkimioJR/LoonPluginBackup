@@ -8,10 +8,10 @@
 #!loon_version=3.2.4(787)
 #!homepage=https://hub.kelee.one
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/IPATool.png
-#!date=2025-12-01 09:05:02
+#!date=2025-12-05 23:16:02
 
 [Script]
-http-request ^https:\/\/apple-api\.com script-path=https://raw.githubusercontent.com/Akimio521/LoonPluginBackup/20251201/kelee/JavaScript/IPATool/AppStoreAPI.js, requires-body=true, tag=App Store API
+http-request ^https:\/\/apple-api\.com script-path=https://raw.githubusercontent.com/Akimio521/LoonPluginBackup/20251207/kelee/JavaScript/IPATool/AppStoreAPI.js, requires-body=true, tag=App Store API
 
 http-request ^https:\/\/xiaobai\.app script-path=https://raw.githubusercontent.com/Akimio521/LoonPluginBackup/20251129/kelee/JavaScript/IPATool/Installer.js, tag=安装器
 
