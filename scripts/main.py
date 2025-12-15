@@ -8,7 +8,7 @@ from download import download_data
 from parse import parse_script_url, parse_jq_url, parse_script_time
 from version import get_current_tag, has_file_changed, get_tag_when_file_last_modified
 
-REPO = "Akimio521/LoonPluginBackup"
+REPO = "AkimioJR/LoonPluginBackup"
 
 PROJECT_ROOT = Path(__file__).parent.parent  # 项目根目录
 
